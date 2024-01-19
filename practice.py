@@ -1,33 +1,41 @@
 import pygame
 from sys import exit #importing a specific feature of python from its module:sys #exit closes any kindof code that si open entirely
 from random import randint,choice #gives random integer between two boundaries    #choice allows us to picka  random item from a list
-
+import math
 
 #SPRITE CLASS     #cant screen.blit sprites so we use groups 
 class Cat (pygame.sprite.Sprite):      # now we define all the attributes of the cat/player in one section which is its sprite class
     def __init__(self):                 #then call the group and then draw later
         super().__init__() #initializing 
         catwalk_surf=pygame.image.load('save/cat.png').convert_alpha()
-        catwalk_surf = pygame.transform.scale(catwalk_surf,(100,100))
+        catwalk_surf = pygame.transform.scale(catwalk_surf,(50,50))
         catwalkk_surf = pygame.image.load('save/cat1.png').convert_alpha()
-        catwalkk_surf = pygame.transform.scale(catwalkk_surf,(100,100))    #dont need self becasue its in the list and list has self 
+        catwalkk_surf = pygame.transform.scale(catwalkk_surf,(50,50))    #dont need self becasue its in the list and list has self 
         self.catwalk_list =  [catwalk_surf, catwalkk_surf]
         self.cat_index = 0 #variable used to choose between the two surfaces to walk
         self.catjump_surf = pygame.image.load('save/catjump1.png')
-        self.catjump_surf = pygame.transform.scale(self.catjump_surf,(100,100)) 
+        self.catjump_surf = pygame.transform.scale(self.catjump_surf,(50,50)) 
 
+        
         self.image = self.catwalk_list[self.cat_index]
-        self.rect = self.image.get_rect(midbottom = (80,328)) #getting the rectangle for the surface  #why si change in y coord not working?
+        self.rect = self.image.get_rect(midbottom = (80,340)) #getting the rectangle for the surface  #why si change in y coord not working?
         self.gravity = 0 #initially set
 
     def cat_input(self):
         keys = pygame.key.get_pressed() #gives all the keys being pressed
         if keys[pygame.K_SPACE] and self.rect.bottom >= 300:
-            self.gravity = -20
-    
+            self.gravity = -40
+        elif pygame.mouse.get_pressed()[0] and self.rect.bottom >=300:
+            self.gravity = -40
+
+
+    #v=u+at
+    #s=ut+0.5*a*t^2
+    #s'=u*(t+1)+0.5a+(t+1)^2
+    #s'-s=u+0.5*a(2t+1)
     def  apply_gravity(self):
-        self.gravity += 1
-        self.rect.y += self.gravity
+        self.gravity += 0.5
+        self.rect.y += self.gravity/7 + 1.5
         if self.rect.bottom >= 300:
             self.rect.bottom = 300
 
@@ -53,13 +61,13 @@ class Obstacles(pygame.sprite.Sprite):
         if type == "bat":
             bat1_surface = pygame.image.load('save/bat.png').convert_alpha()
             bat2_surface = pygame.image.load('save/bat1.png').convert_alpha()
-            bat1_surface = pygame.transform.scale(bat1_surface,(65,65))
-            bat2_surface = pygame.transform.scale(bat2_surface,(75,75))
+            bat1_surface = pygame.transform.scale(bat1_surface,(30,30))
+            bat2_surface = pygame.transform.scale(bat2_surface,(35,35))
             self.frames = [bat2_surface, bat1_surface]
-            y_position = 210
+            y_position = 170
         else:
             solar_surface =  pygame.image.load('save/solar2.png').convert_alpha()   #scaling the image to wtv size is needed #rotozoom, scale2x, various more ways to scale in documentation
-            solar_surface =  pygame.transform.scale(solar_surface,(30,75))
+            solar_surface =  pygame.transform.scale(solar_surface,(20,50))
             y_position = 313
             self.frames = [solar_surface,solar_surface]
 
@@ -81,12 +89,20 @@ class Obstacles(pygame.sprite.Sprite):
     def update(self):
         self.obstacle_animation()
         #for movement 
-        self.rect.x -= 6
+        self.rect.x -= 3
         #fro destroying
         self.destroy()
    
 
-
+#checking sprite collisions
+def sprite_collisions():
+    if pygame.sprite.spritecollide(cat.sprite,obstacle_group,False):  #just cat does not work as cat is the groupsingle and not the sprite   #boolean checks wether the sprite/group?? will be destroyed on collision
+        obstacle_group.empty()
+        return False
+    else:
+        return True
+    
+ 
 def display_score():
     current_time  = int(pygame.time.get_ticks()/1000) - start_time #gives time from when pygame starts in miliseconds  #concerting from miliseconds to seconds
     score_font =  pygame.font.Font('save/font.ttf',40)
@@ -240,6 +256,7 @@ while True:
             if event.type == pygame.MOUSEBUTTONDOWN:    #buttondown. buttonup to check if pressed, motion to get position and see if its moving(returns event.pos)
                 if cat_rect.collidepoint(event.pos):
                       cat_gravity=-20
+                      
 
             #jumping in event loop (check if any button is pressed, then work with a specific key)
             if event.type == pygame.KEYDOWN:
@@ -283,7 +300,7 @@ while True:
         build1_rect.x -=4
         if build1_rect.x <= -100:
             build1_rect.x = 800
-        screen.blit(build1_surf,build1_rect)
+        #screen.blit(build1_surf,build1_rect)
 
 
         #solar panel functions
@@ -317,6 +334,7 @@ while True:
 
 
         #collisions
+        game_active = sprite_collisions()
         #if solar_rect.colliderect(cat_rect):
             #game_active=False
         #game_active = collisions(cat_rect, obstacle_rect_list) #returns false if there is a collision so we move on to the else statement right after
@@ -356,7 +374,7 @@ while True:
        #print(pygame.mouse.get_pressed())
 
     pygame.display.update() #(updates the display surface we made earlier)
-    clock.tick(60)          #sets maximum frame rate #miniumum frame rate for higher end games
+    clock.tick(120)          #sets maximum frame rate #miniumum frame rate for higher end games
     
 
 
