@@ -15,12 +15,13 @@ class Cat (pygame.sprite.Sprite):      # now we define all the attributes of the
         catwalkk_surf = pygame.transform.scale(catwalkk_surf,(50,50))    #dont need self becasue its in the list and list has self 
         self.catwalk_list =  [catwalk_surf, catwalkk_surf]
         self.cat_index = 0 #variable used to choose between the two surfaces to walk
-        self.catjump_surf = pygame.image.load('save/catjump1.png')
+        catjump_surf =pygame.image.load('save/catjump1.png')
+        self.catjump_surf = catjump_surf
         self.catjump_surf = pygame.transform.scale(self.catjump_surf,(50,50)) 
 
         
         self.image = self.catwalk_list[self.cat_index]
-        self.rect = self.image.get_rect(midbottom = (80,340)) #getting the rectangle for the surface  #why si change in y coord not working?
+        self.rect = self.image.get_rect(midbottom = (80,350)) #getting the rectangle for the surface  #why si change in y coord not working?
         self.gravity = 0 #initially set
 
     def cat_input(self):
@@ -49,12 +50,37 @@ class Cat (pygame.sprite.Sprite):      # now we define all the attributes of the
             if self.cat_index >= len(self.catwalk_list):
                 self.cat_index = 0
             self.image = self.catwalk_list[int(self.cat_index)]
+    
+    def switch(self):
+        dogwalk_surf=pygame.image.load('save/dogwalk.png').convert_alpha() 
+        dogwalk_surf=pygame.transform.scale(dogwalk_surf,(60,40))
+        dogwalkk_surf = pygame.image.load('save/dogwalkk.png').convert_alpha()
+        dogwalkk_surf=pygame.transform.scale(dogwalkk_surf,(60,40))
+        self.catwalk_list=[dogwalk_surf,dogwalkk_surf]
+        dogjump_surf=pygame.image.load('save/dogjump.png')
+        dogjump_surf=pygame.transform.scale(dogjump_surf,(60,40))
+        self.catjump_surf = dogjump_surf
+    
+    def switch_back(self):  #why is dog above ground?? #why is it not switching instantly??
+        catwalk_surf=pygame.image.load('save/cat.png').convert_alpha()
+        catwalk_surf = pygame.transform.scale(catwalk_surf,(50,50))     
+        catwalkk_surf = pygame.image.load('save/cat1.png').convert_alpha()
+        catwalkk_surf = pygame.transform.scale(catwalkk_surf,(50,50))  
+        self.catwalk_list= [catwalk_surf, catwalkk_surf]
+        catjump_surf =pygame.image.load('save/catjump1.png')
+        catjump_surf = pygame.transform.scale(catjump_surf,(50,50))
+        self.catjump_surf = catjump_surf
 
     
     def update(self):
         self.cat_input()
         self.apply_gravity()
         self.cat_animation()
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_1:
+                self.switch()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_2:
+                self.switch_back()
 
 
 #OBSTACLES
@@ -105,6 +131,25 @@ def sprite_collisions():
     else:
         return True
     
+
+def background_animation():
+    sky_surface =  pygame.image.load('save/sky.png').convert() #converting to something pyagem si more comfortable with so program runs faster
+    sky_surface = pygame.transform.scale(sky_surface,(800,400))
+    sky2_surface =  pygame.image.load('save/sky2.png').convert() #converting to something pyagem si more comfortable with so program runs faster
+    sky3_surface =  pygame.image.load('save/sky3.png').convert() #converting to something pyagem si more comfortable with so program runs faster
+    sky2_surface = pygame.transform.scale(sky2_surface,(800,400))
+    sky3_surface = pygame.transform.scale(sky3_surface,(800,400))
+    sky4_surface =  pygame.image.load('save/sky4.png').convert() #converting to something pyagem si more comfortable with so program runs faster
+    sky4_surface = pygame.transform.scale(sky4_surface,(800,400))
+
+    sky_list = [sky_surface,sky2_surface,sky3_surface,sky4_surface]
+    
+    sky_index=0
+    screen.blit(sky_list[sky_index],(0,0))
+    
+
+
+
 
 def display_score():
     current_time  = int(pygame.time.get_ticks()/1000) - start_time #gives time from when pygame starts in miliseconds  #concerting from miliseconds to seconds
@@ -296,7 +341,7 @@ while True:
 
     if game_active:
         #attaching surface to display surface(block image transfer)
-        screen.blit(sky_surface,(0,0))
+        screen.blit(sky_surface,(0,0)) #################################################################
         screen.blit(ground_surface,(0,300))
         
         score = display_score()
