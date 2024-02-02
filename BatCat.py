@@ -53,12 +53,12 @@ class Cat (pygame.sprite.Sprite):      # now we define all the attributes of the
     
     def switch(self):
         dogwalk_surf=pygame.image.load('save/dogwalk.png').convert_alpha() 
-        dogwalk_surf=pygame.transform.scale(dogwalk_surf,(60,40))
+        dogwalk_surf=pygame.transform.scale(dogwalk_surf,(60,50))
         dogwalkk_surf = pygame.image.load('save/dogwalkk.png').convert_alpha()
-        dogwalkk_surf=pygame.transform.scale(dogwalkk_surf,(60,40))
+        dogwalkk_surf=pygame.transform.scale(dogwalkk_surf,(60,50))
         self.catwalk_list=[dogwalk_surf,dogwalkk_surf]
         dogjump_surf=pygame.image.load('save/dogjump.png')
-        dogjump_surf=pygame.transform.scale(dogjump_surf,(60,40))
+        dogjump_surf=pygame.transform.scale(dogjump_surf,(60,50))
         self.catjump_surf = dogjump_surf
     
     def switch_back(self):  #why is dog above ground?? #why is it not switching instantly??
@@ -76,12 +76,7 @@ class Cat (pygame.sprite.Sprite):      # now we define all the attributes of the
         self.cat_input()
         self.apply_gravity()
         self.cat_animation()
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_1:
-                self.switch()
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_2:
-                self.switch_back()
-
+        
 
 #OBSTACLES
 class Obstacles(pygame.sprite.Sprite):
@@ -130,23 +125,6 @@ def sprite_collisions():
         return False
     else:
         return True
-    
-
-def background_animation():
-    sky_surface =  pygame.image.load('save/sky.png').convert() #converting to something pyagem si more comfortable with so program runs faster
-    sky_surface = pygame.transform.scale(sky_surface,(800,400))
-    sky2_surface =  pygame.image.load('save/sky2.png').convert() #converting to something pyagem si more comfortable with so program runs faster
-    sky3_surface =  pygame.image.load('save/sky3.png').convert() #converting to something pyagem si more comfortable with so program runs faster
-    sky2_surface = pygame.transform.scale(sky2_surface,(800,400))
-    sky3_surface = pygame.transform.scale(sky3_surface,(800,400))
-    sky4_surface =  pygame.image.load('save/sky4.png').convert() #converting to something pyagem si more comfortable with so program runs faster
-    sky4_surface = pygame.transform.scale(sky4_surface,(800,400))
-
-    sky_list = [sky_surface,sky2_surface,sky3_surface,sky4_surface]
-    
-    sky_index=0
-    screen.blit(sky_list[sky_index],(0,0))
-    
 
 
 
@@ -215,6 +193,8 @@ pygame.display.set_caption('BatCat')
 #setting up a clock for frame rate 
 clock=pygame.time.Clock()
 
+sky_index = 0
+
 
 #making the group 
 #to check for collisions, the cat and obstacles must be in different groyups 
@@ -227,6 +207,14 @@ obstacle_group = pygame.sprite.Group()
 #Background
 sky_surface =  pygame.image.load('save/sky.png').convert() #converting to something pyagem si more comfortable with so program runs faster
 sky_surface = pygame.transform.scale(sky_surface,(800,400))
+sky2_surface =  pygame.image.load('save/sky2.png').convert() #converting to something pyagem si more comfortable with so program runs faster
+sky3_surface =  pygame.image.load('save/sky3.png').convert() #converting to something pyagem si more comfortable with so program runs faster
+sky2_surface = pygame.transform.scale(sky2_surface,(800,400))
+sky3_surface = pygame.transform.scale(sky3_surface,(800,400))
+sky4_surface =  pygame.image.load('save/sky4.png').convert() #converting to something pyagem si more comfortable with so program runs faster
+sky4_surface = pygame.transform.scale(sky4_surface,(800,400))
+
+sky_list = [sky_surface,sky2_surface,sky3_surface,sky4_surface]
 
 ground_surface =  pygame.image.load('save/ground.png').convert()
 ground_surface= pygame.transform.scale(ground_surface,(800,100))
@@ -297,6 +285,10 @@ pygame.time.set_timer(obstacles_event,1500) #event to trigger, periodicity
 bat_timer = pygame.USEREVENT + 2
 pygame.time.set_timer(bat_timer,500)
 
+#timer for background animation
+bg_timer = pygame.USEREVENT + 3
+pygame.time.set_timer(bg_timer,500)
+
 
 #to keep screen running
 while True:
@@ -317,6 +309,13 @@ while True:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE and cat_rect.bottom>=328:  #so that it only jumps when it is on the ground
                     cat_gravity=-20
+                
+                elif event.key == pygame.K_1:
+                    cat.sprite.switch()
+                elif event.key == pygame.K_2:
+                    cat.sprite.switch_back()
+
+                
 
         else:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
@@ -337,11 +336,19 @@ while True:
                     bat_index = 1
                 else:
                     bat_index = 0
-                bat_surface = bat_fly[bat_index]    
+                bat_surface = bat_fly[bat_index]   
+
+            if event.type == bg_timer:
+                sky_index+=1
+                sky_index%=4
+                print(sky_index)
+                
+
+
 
     if game_active:
         #attaching surface to display surface(block image transfer)
-        screen.blit(sky_surface,(0,0)) #################################################################
+        screen.blit(sky_list[sky_index],(0,0)) 
         screen.blit(ground_surface,(0,300))
         
         score = display_score()
