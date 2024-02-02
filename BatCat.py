@@ -341,9 +341,6 @@ while True:
             if event.type == bg_timer:
                 sky_index+=1
                 sky_index%=4
-                print(sky_index)
-                
-
 
 
     if game_active:
