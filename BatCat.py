@@ -4,11 +4,12 @@ from random import randint,choice #gives random integer between two boundaries  
 import math
 
 
+        
 #SPRITE CLASS     #cant screen.blit sprites so we use groups 
 #PLAYER
 class Cat (pygame.sprite.Sprite):      # now we define all the attributes of the cat/player in one section which is its sprite class
     def __init__(self):                 #then call the group and then draw later
-        super().__init__() #initializing 
+        super().__init__() #initializing the parent?
         catwalk_surf=pygame.image.load('save/cat.png').convert_alpha()
         catwalk_surf = pygame.transform.scale(catwalk_surf,(50,50))     
         catwalkk_surf = pygame.image.load('save/cat1.png').convert_alpha()
@@ -24,10 +25,14 @@ class Cat (pygame.sprite.Sprite):      # now we define all the attributes of the
         self.rect = self.image.get_rect(midbottom = (80,350)) #getting the rectangle for the surface  #why si change in y coord not working?
         self.gravity = 0 #initially set
 
+        self.jump_sound=pygame.mixer.Sound('save/jump.mp3')
+        self.jump_sound.set_volume(0.3)#value has to be between 0 and 1
+
     def cat_input(self):
         keys = pygame.key.get_pressed() #gives all the keys being pressed
         if keys[pygame.K_SPACE] and self.rect.bottom >= 300:
             self.gravity = -40
+            self.jump_sound.play()
         elif pygame.mouse.get_pressed()[0] and self.rect.bottom >=300:
             self.gravity = -40
 
@@ -41,6 +46,7 @@ class Cat (pygame.sprite.Sprite):      # now we define all the attributes of the
         self.rect.y += self.gravity/7 + 1.5     
         if self.rect.bottom >= 300:
             self.rect.bottom = 300
+                
 
     def cat_animation(self):
         if self.rect.bottom <300:
@@ -91,7 +97,7 @@ class Obstacles(pygame.sprite.Sprite):
             y_position = 170
         else:
             solar_surface =  pygame.image.load('save/solar2.png').convert_alpha()   #scaling the image to wtv size is needed #rotozoom, scale2x, various more ways to scale in documentation
-            solar_surface =  pygame.transform.scale(solar_surface,(20,50))
+            solar_surface =  pygame.transform.scale(solar_surface,(75,75))
             y_position = 313
             self.frames = [solar_surface,solar_surface]
 
@@ -120,20 +126,20 @@ class Obstacles(pygame.sprite.Sprite):
 
 #checking sprite collisions
 def sprite_collisions():
+    global health_list, health_index
     if pygame.sprite.spritecollide(cat.sprite,obstacle_group,False):  #just cat does not work as cat is the groupsingle and not the sprite   #boolean checks wether the sprite/group?? will be destroyed on collision
+        health_index -=1
         obstacle_group.empty()
         return False
     else:
         return True
 
 
-
-
 def display_score():
     current_time  = int(pygame.time.get_ticks()/1000) - start_time #gives time from when pygame starts in miliseconds  #concerting from miliseconds to seconds
     score_font =  pygame.font.Font('save/font.ttf',40)
     score_surface =  score_font.render(f'Time:{current_time}',True,(200,200,200)) #put the integer in an f string?!!?!??!?!?!?!?!?!?!?
-    score_rect = score_surface.get_rect(center=(100,50))
+    score_rect = score_surface.get_rect(center=(100,60))
     screen.blit(score_surface,score_rect)
     return current_time
 
@@ -170,7 +176,7 @@ def cat_animation():
         cat_index += 0.1 #kindof a timer?
         if cat_index>= len(catwalk_list):  #len gives length of the list
             cat_index = 0     
-        cat_surf = catwalk_list[int(cat_index)] #int important
+        cat_surf = catwalk_list[int(cat_index)] #int important 
 
 
 
@@ -195,11 +201,16 @@ clock=pygame.time.Clock()
 
 sky_index = 0
 
+#bg music
+bg_music=pygame.mixer.Sound('save/bg.mp3')
+bg_music.play(loops=-1)  #-1 loops it forever, we can loop it for a finite number of times
+
 
 #making the group 
 #to check for collisions, the cat and obstacles must be in different groyups 
 cat = pygame.sprite.GroupSingle()
 cat.add(Cat())  
+
 
 #single group for player and group for obstacles
 obstacle_group = pygame.sprite.Group()
@@ -262,9 +273,17 @@ cat_rect=cat_surf.get_rect(midbottom=(80,328))   #method.getrect to get rectangl
 cat_gravity=0  
 cat_vely=0
 
-#dog
 
+#healthbar
+health1_surf=pygame.image.load('save/hearts1.png').convert_alpha()
+health1_surf=pygame.transform.scale(health1_surf,(40,40))
+health2_surf=pygame.image.load('save/hearts2.png').convert_alpha()
+health2_surf=pygame.transform.scale(health2_surf,(80,40))
+health3_surf=pygame.image.load('save/hearts3.png').convert_alpha()
+health3_surf=pygame.transform.scale(health3_surf,(120,40))
 
+health_list=[health1_surf,health2_surf,health3_surf]
+health_index=2
 
 #endscreen
 catlaugh_surf=pygame.image.load('save/end.png')
@@ -320,8 +339,9 @@ while True:
         else:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 game_active = True
+                health_index=2
                 #solar_rect.x=800
-                build1_rect.x=800 
+                #build1_rect.x=800 
                 start_time=int(pygame.time.get_ticks()/1000)   #int to avoid floating point numbers
 
         if game_active: #checking all the timers only if the game is active 
@@ -347,7 +367,7 @@ while True:
         #attaching surface to display surface(block image transfer)
         screen.blit(sky_list[sky_index],(0,0)) 
         screen.blit(ground_surface,(0,300))
-        
+        screen.blit(health_list[health_index],(650,50))
         score = display_score()
 
         #firts building functions
@@ -360,12 +380,35 @@ while True:
         cat.draw(screen)    #specify surface you need to draw on
         cat.update()
 
+
         obstacle_group.draw(screen)
         obstacle_group.update()
 
         #collisions
         game_active = sprite_collisions()
-        
+
+        if health_index==1 or health_index == 0:
+            screen.blit(sky_list[sky_index],(0,0)) 
+            screen.blit(ground_surface,(0,300))
+            screen.blit(health_list[health_index],(650,50))
+            score = display_score()
+
+            cat.draw(screen)    #specify surface you need to draw on
+            cat.update()
+            
+            obstacle_group.draw(screen)
+            obstacle_group.update()
+
+            #collisions
+            game_active = sprite_collisions()
+
+            pygame.display.update() #(updates the display surface we made earlier)
+            clock.tick(120)  
+
+        if health_index<0:
+            game_active=False
+
+
     else:
         screen.fill((0,0,0))
         screen.blit(catlaugh_surf,catlaugh_rect)
@@ -376,9 +419,12 @@ while True:
         player_gravity = 0 #so that we start at the bottom and dont fall further
 
         #to display current score
-        score_surf=test_font.render(f'Score:{score}',False,(250,250,250))
+        score_surf=test_font.render(f'Score:{score}',False,(250,250,250))    #########################chnage score color
         score_rect=score_surf.get_rect(center=(100,200))
         screen.blit(score_surf,score_rect)
+
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            game_active = True
 
     pygame.display.update() #(updates the display surface we made earlier)
     clock.tick(120)          #sets maximum frame rate #miniumum frame rate for higher end games
